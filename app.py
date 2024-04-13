@@ -88,23 +88,22 @@ ui.h2("Current Cost", style="color:navy")
 
 with ui.layout_columns():
     with ui.value_box(
-        showcase=icon_svg("wallet"),
-        theme="bg-gradient-blue-teal",
-    ):
+        showcase=icon_svg("wallet")):
       
         "Current Diamond Cost"
         
         @render.text
         def display_temp():
             deque_snapshot, df, latest_dictionary_entry = reactive_calc_combined()
-            theme="bg-gradient-green-blue",
             return f"{latest_dictionary_entry['cost']} $"
 
 
         "Higher than average costs"
 
-    with ui.card(full_screen=True):
-        ui.card_header("Current Date and Time", style="color:navy")
+    with ui.value_box(showcase=icon_svg("calendar")):
+
+        "Current Date and Time"
+        
         @render.text
         def display_time():
             deque_snapshot, df, latest_dictionary_entry = reactive_calc_combined()
@@ -116,25 +115,46 @@ with ui.layout_columns():
         with ui.nav_panel("Diamond Data Table"):
 
             @render.data_frame
-            def penguins_data_table():
+            def diamonds_data_table():
                 return render.DataTable(diamonds_df)
 
         with ui.nav_panel("Diamond Data Grid"):
 
             @render.data_frame
-            def penguins_data_grid():
+            def diamonds_data_grid():
                 return render.DataGrid(diamonds_df)
 
- # Display a Seaborn histogram showing all cuts of diamonds
-    with ui.navset_card_pill(id="tab2"):
-        with ui.nav_panel("Seaborn Diamond Histogram"):
-            @render.plot
-            def seaborn_histogram():
-               histplot = sns.histplot(data=diamonds_df, x="cut", hue="clarity", bins=input.seaborn_bin_count())
-               histplot.set_title("Seaborn Diamonds")
-               histplot.set_xlabel("Cut")
-               histplot.set_ylabel("Count")
-               sns.set_style('darkgrid')
-               return histplot 
+ 
+    with ui.card():
+        ui.card_header("Chart with Current Trend")
+
+        @render_plotly
+        def display_plotly():
+            deque_snapshot, df, latest_dictionary_entry = reactive_calc_combined()
+
+            if not df.empty:
+                df["timestamp"] = pd.to_datetime(df["timestamp"])
+
+                fig = px.scatter(df,
+                x="timestamp",
+                y="cost",
+                title="Diamond Costs with Regression Line",
+                labels={"cost": "Cost in American Dollars ($)", "timestamp": "Timestamp"},
+                color_discrete_sequence=["teal"])
+
+                sequence = range(len(df))
+                x_vals = list(sequence)
+                y_vals = df["cost"]
+
+                slope, intercept, r_value, p_value, std_err = stats.linregress(x_vals, y_vals)
+                df['best_fit_line'] = [slope * x + intercept for x in x_vals]
+                
+                #add regresion line to figure
+                fig.add_scatter(x=df["timestamp"], y=df['best_fit_line'], mode='lines', name='Regression Line')
+
+                #update layout as needed to customize further
+                fig.update_layout(xaxis_title="Time",yaxis_title="Diamond Cost in American Dollars ($)")
+                return fig
+            
 
            
