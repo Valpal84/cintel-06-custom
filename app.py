@@ -19,7 +19,7 @@ diamonds_df = sns.load_dataset('diamonds')
 UPDATE_INTERVAL_SECS: int = 2
 
 # Add a deque
-DEQUE_SIZE: int = 8
+DEQUE_SIZE: int = 5
 reactive_value_wrapper = reactive.value(deque(maxlen=DEQUE_SIZE))
 
 @reactive.calc()
@@ -124,7 +124,15 @@ with ui.layout_columns():
             def diamonds_data_grid():
                 return render.DataGrid(diamonds_df)
 
- 
+    with ui.card(full_screen=True):
+        ui.card_header("Most Recent Diamond Costs")
+
+        @render.data_frame
+        def display_df():
+            deque_snapshot, df, latest_dictionary_entry = reactive_calc_combined()
+            pd.set_option('display.width', None)
+            return render.DataGrid(df,width="100%")
+            
     with ui.card():
         ui.card_header("Chart with Current Trend")
 
