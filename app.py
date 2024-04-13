@@ -59,9 +59,9 @@ with ui.sidebar(open="open"):
         "A demonstration of real-time costs for sourced diamonds.",
         class_="text-center",
     )
-    ui.input_numeric("plotly_bin_count", "Bin_count", 1, min=1, max=15)
-    ui.input_checkbox_group("select_diamond_cut",
-                           "Select Diamond Cut",
+    ui.input_numeric("plotly_bin_count", "Bin_count", 1, min=1, max=53940)
+    ui.input_checkbox_group("selected_diamond_cut",
+                           "cut",
                            ["Premium", "Ideal", "Very Good", "Good", "Fair"],
                            selected=["Very Good"],
                            inline=True,
@@ -116,13 +116,14 @@ with ui.layout_columns():
 
             @render.data_frame
             def diamonds_data_table():
-                return render.DataTable(diamonds_df)
+                return render.DataTable(filtered_data())
 
         with ui.nav_panel("Diamond Data Grid"):
 
             @render.data_frame
             def diamonds_data_grid():
-                return render.DataGrid(diamonds_df)
+                return render.DataGrid(filtered_data())
+
 
     with ui.card(full_screen=True):
         ui.card_header("Most Recent Diamond Costs")
@@ -164,5 +165,7 @@ with ui.layout_columns():
                 fig.update_layout(xaxis_title="Time",yaxis_title="Diamond Cost in American Dollars ($)")
                 return fig
             
-
+@reactive.calc
+def filtered_data():
+    return diamonds_df[diamonds_df["cut"].isin(input.selected_diamond_cut())]
            
